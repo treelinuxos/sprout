@@ -242,4 +242,19 @@ def _cmd_info(args):
 
 
 def _cmd_rollback(args):
-    print("[todo] rollback")
+    from sprout.backup import rollback, list_backups
+
+    if not args:
+        # show available backups
+        backups = list_backups()
+        if not backups:
+            print("  no backups found")
+        else:
+            print("available backups:")
+            for b in backups:
+                print(f"  {b['date']} — {b['description']} ({b['dir']})")
+        return
+
+    target = args[0]
+    force = "--force" in args
+    rollback(target=target, force=force)
