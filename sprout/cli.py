@@ -86,16 +86,24 @@ def _cmd_install(args):
     if not args:
         print("sprout install: no package specified", file=sys.stderr)
         sys.exit(1)
-    pkg = args[0]
-    print(f"[todo] install {pkg}")
+    from sprout.packages import install, ApkError
+    try:
+        install(args)
+    except ApkError as e:
+        print(f"! install failed: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def _cmd_remove(args):
     if not args:
         print("sprout remove: no package specified", file=sys.stderr)
         sys.exit(1)
-    pkg = args[0]
-    print(f"[todo] remove {pkg}")
+    from sprout.packages import remove, ApkError
+    try:
+        remove(args)
+    except ApkError as e:
+        print(f"! remove failed: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def _cmd_upgrade(args):
@@ -112,11 +120,25 @@ def _cmd_update(args):
 
 
 def _cmd_apply(args):
-    print("[todo] apply")
+    dry_run = "--dry-run" in args
+    non_interactive = "--non-interactive" in args
+    config = args[-1] if args and not args[-1].startswith("--") else None
+    from sprout.applier import apply
+    apply(config_path=config, interactive=not non_interactive, dry_run=dry_run)
 
 
 def _cmd_diff(args):
-    print("[todo] diff")
+    config = args[0] if args else None
+    from sprout.diff import diff_system, format_diff
+    if config:
+        from sprout.diff import diff_config, SystemState
+        state = SystemState()
+        state.refresh()
+        result = diff_config(config, state)
+        print(format_diff({"system": result, "users": {}}))
+    else:
+        result = diff_system()
+        print(format_diff(result))
 
 
 def _cmd_search(args):
