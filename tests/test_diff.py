@@ -41,19 +41,18 @@ class TestDiffConfig(unittest.TestCase):
         state = SystemState()
         state.installed_packages = {"neovim", "firefox", "htop"}
         result = diff_config(path, state)
-        # firefox and htop are in config but not desired, so to_remove
+        # all installed are desired, nothing to remove
         self.assertEqual(result["packages"]["to_install"], [])
-        self.assertIn("firefox", result["packages"]["to_remove"])
-        self.assertIn("htop", result["packages"]["to_remove"])
+        self.assertEqual(result["packages"]["to_remove"], [])
         os.unlink(path)
 
     def test_to_install_and_remove(self):
-        path = self._write("packages\n\tneovim\n\tvim\n\temacs\n")
+        path = self._write("packages\n\tneovim\n\tvim\n")
         state = SystemState()
         state.installed_packages = {"neovim", "emacs"}
         result = diff_config(path, state)
         self.assertIn("vim", result["packages"]["to_install"])
-        # emacs is in config but not desired, so to_remove
+        # emacs is installed but not desired, so to_remove
         self.assertIn("emacs", result["packages"]["to_remove"])
         os.unlink(path)
 
