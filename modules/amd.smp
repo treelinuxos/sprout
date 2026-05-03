@@ -1,5 +1,5 @@
 #!/usr/bin/env micropython
-import sprout
+import sprout_lib
 
 # AMD GPU driver installation
 gpu = sprout.detect("gpu")

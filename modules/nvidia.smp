@@ -1,5 +1,5 @@
 #!/usr/bin/env micropython
-import sprout
+import sprout_lib
 
 # NVIDIA driver installation
 gpu = sprout.detect("gpu")

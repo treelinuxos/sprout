@@ -1,27 +1,29 @@
-#!/usr/bin/env micropython
-import sprout
+#!/usr/bin/env python3
+import subprocess
+import os
 
 # Update sprout from GitHub
-sprout.info("Updating sprout from GitHub...")
+print("Updating sprout from GitHub...")
 
 # Install git if needed
-if not sprout.is_installed("git"):
-    sprout.info("Installing git...")
-    sprout.apply("git")
+try:
+    subprocess.run(["git", "--version"], check=True)
+except:
+    print("Installing git...")
+    subprocess.run(["apk", "add", "git"], check=True)
 
 # Clone or update sprout repo
-import os
 sprout_dir = "/tmp/sprout-update"
 
 if os.path.exists(sprout_dir):
-    sprout.info("Pulling latest changes...")
-    os.system(f"cd {sprout_dir} && git pull")
+    print("Pulling latest changes...")
+    subprocess.run(["git", "-C", sprout_dir, "pull"], check=True)
 else:
-    sprout.info("Cloning sprout repo...")
-    os.system(f"git clone https://github.com/treelinuxos/sprout.git {sprout_dir}")
+    print("Cloning sprout repo...")
+    subprocess.run(["git", "clone", "https://github.com/treelinuxos/sprout.git", sprout_dir], check=True)
 
 # Install updated sprout
-sprout.info("Installing updated sprout...")
-os.system(f"cd {sprout_dir} && cp -r sprout /usr/lib/python3.12/site-packages/")
+print("Installing updated sprout...")
+subprocess.run(["cp", "-r", f"{sprout_dir}/sprout", "/usr/lib/python3.12/site-packages/"], check=True)
 
-sprout.info("Sprout update complete!")
+print("Sprout update complete!")

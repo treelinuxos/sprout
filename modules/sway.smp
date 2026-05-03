@@ -2,7 +2,7 @@
 """
 sway.smp — install sway wayland compositor and essentials."""
 
-import sprout
+import sprout_lib
 
 sprout.info("installing sway desktop environment")
 sprout.apply([

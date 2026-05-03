@@ -50,6 +50,8 @@ def apply(config_path=None, interactive=True, dry_run=False):
     # show summary
     if not to_install and not to_remove:
         print("  system is already in sync with config")
+        # still run modules even if no package changes
+        _run_modules(config)
         return
 
     print(f"  changes needed for {config_path}:")
@@ -102,6 +104,39 @@ def apply(config_path=None, interactive=True, dry_run=False):
                 sys.exit(1)
 
     print("  apply complete")
+
+    # run modules specified in config (always run, even if no package changes)
+    _run_modules(config)
+
+def _run_modules(config):
+    """run .smp modules specified in the config."""
+    modules = config["blocks"].get("modules", [])
+    if not modules:
+        print("  no modules to run")
+        return
+    
+    print(f"  running {len(modules)} module(s)...")
+    from sprout.runner import run_module
+    import os
+    
+    # search in /etc/treelinux/modules/ and include dirs
+    module_dirs = ["/etc/treelinux/modules", "/etc/treelinux"]
+    
+    for mod in modules:
+        found = None
+        for d in module_dirs:
+            path = os.path.join(d, mod)
+            if os.path.isfile(path):
+                found = path
+                break
+        if found:
+            print(f"    running {mod}...")
+            try:
+                run_module(found)
+            except Exception as e:
+                print(f"! module {mod} failed: {e}")
+        else:
+            print(f"! module not found: {mod}")
 
 
 def _handle_removal(packages, config_path):
