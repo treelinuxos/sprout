@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+import sprout_lib
+
+sprout_lib.info("KDE Plasma desktop environment module")
+# TODO: configure plasma, set up display manager, etc.
+sprout_lib.info("KDE Plasma module complete")

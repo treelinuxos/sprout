@@ -106,6 +106,7 @@ def apply(config_path=None, interactive=True, dry_run=False):
     print("  apply complete")
 
     # run modules specified in config (always run, even if no package changes)
+    print("  checking for modules to run...")
     _run_modules(config)
 
 def _run_modules(config):
