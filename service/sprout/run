@@ -1,0 +1,4 @@
+#!/bin/sh
+# sprout boot service — apply system.prc silently on boot
+
+exec sprout apply --non-interactive >> /var/log/sprout.log 2>&1
