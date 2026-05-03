@@ -27,9 +27,10 @@ def run_apk(*args, check=True, capture=True):
         else:
             result = subprocess.run(cmd, timeout=300)
         if check and result.returncode != 0:
+            stderr = result.stderr.strip() if result.stderr else "no output"
             raise ApkError(
                 f"apk failed with code {result.returncode}\n"
-                f"stderr: {result.stderr.strip()}"
+                f"stderr: {stderr}"
             )
         return result
     except FileNotFoundError:
@@ -97,12 +98,15 @@ def list_installed():
         return []
     packages = []
     for line in result.stdout.strip().split("\n"):
-        # apk list format: "name-version-revision"
-        # names can contain hyphens, so split from the right
-        parts = line.rsplit("-", 2)
-        name = parts[0]
+        # apk list format: "name-version-revision arch {origin} (license)"
+        # split on space to get just "name-version-revision"
+        pkg_full = line.split()[0]
+        # split from right: "name-version" + "revision"
+        name_ver, _ = pkg_full.rsplit("-", 1)
+        # split again: "name" + "version"
+        name, _ = name_ver.rsplit("-", 1)
         packages.append(name)
-    return sorted(packages)
+    return sorted(set(packages))
 
 
 def is_installed(package):

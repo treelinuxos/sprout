@@ -26,9 +26,16 @@ def run(args):
     elif command == "update":
         _cmd_update(args[1:])
     elif command == "apply":
-        _cmd_apply(args[1:])
+        from sprout.applier import apply
+        apply(interactive=(not "--non-interactive" in args[1:]))
     elif command == "diff":
-        _cmd_diff(args[1:])
+        from sprout.diff import diff_config, SystemState
+        config_path = args[1] if args[1:] else "/etc/treelinux/system.prc"
+        state = SystemState()
+        state.refresh()
+        result = diff_config(config_path, state)
+        print("Packages to install:", result["packages"]["to_install"])
+        print("Packages to remove:", result["packages"]["to_remove"])
     elif command == "search":
         _cmd_search(args[1:])
     elif command == "run":
