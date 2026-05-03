@@ -158,7 +158,58 @@ def _cmd_run(args):
 
 
 def _cmd_user(args):
-    print("[todo] user")
+    from sprout.users import (
+        create_user_config,
+        list_user_configs,
+        remove_user_config,
+        add_to_user_config,
+        remove_from_user_config,
+        get_user_config,
+    )
+
+    if not args:
+        # list all users
+        configs = list_user_configs()
+        if not configs:
+            print("  no user configs found")
+        else:
+            print("user configs:")
+            for username, path in configs:
+                print(f"  {username} — {path}")
+        return
+
+    subcmd = args[0]
+
+    if subcmd == "create":
+        if len(args) < 2:
+            print("sprout user create <username>", file=sys.stderr)
+            sys.exit(1)
+        create_user_config(args[1])
+    elif subcmd == "remove":
+        if len(args) < 2:
+            print("sprout user remove <username>", file=sys.stderr)
+            sys.exit(1)
+        remove_user_config(args[1])
+    elif subcmd == "list":
+        configs = list_user_configs()
+        if not configs:
+            print("  no user configs found")
+        else:
+            for username, path in configs:
+                print(f"  {username} — {path}")
+    elif subcmd == "add":
+        if len(args) < 4:
+            print("sprout user add <username> <block> <item>", file=sys.stderr)
+            sys.exit(1)
+        add_to_user_config(args[1], args[2], args[3:])
+    elif subcmd == "remove-item":
+        if len(args) < 4:
+            print("sprout user remove-item <username> <block> <item>", file=sys.stderr)
+            sys.exit(1)
+        remove_from_user_config(args[1], args[2], args[3:])
+    else:
+        print(f"sprout user: unknown subcommand '{subcmd}'", file=sys.stderr)
+        sys.exit(1)
 
 
 def _cmd_info(args):
