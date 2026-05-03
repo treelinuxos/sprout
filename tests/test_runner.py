@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
-from sprout.runner import run_module, ModuleError, _find_micropython
+from sprout.runner import run_module, ModuleError, _find_python3
 
 
 class TestRunner(unittest.TestCase):
@@ -26,13 +26,13 @@ class TestRunner(unittest.TestCase):
                 run_module(f.name)
         os.unlink(f.name)
 
-    def test_micropython_not_found(self):
+    def test_python3_not_found(self):
         f = tempfile.NamedTemporaryFile(
             mode="w", suffix=".smp", delete=False
         )
         f.write("# test")
         f.close()
-        with patch("sprout.runner._find_micropython", return_value=None):
+        with patch("sprout.runner._find_python3", return_value=None):
             with patch("sprout.runner.sys.exit", side_effect=SystemExit):
                 with self.assertRaises(SystemExit):
                     run_module(f.name)
@@ -41,7 +41,7 @@ class TestRunner(unittest.TestCase):
     @patch("sprout.runner.subprocess.run")
     def test_run_module_success(self, mock_run):
         mock_run.return_value = MagicMock(returncode=0)
-        with patch("sprout.runner._find_micropython", return_value="/usr/bin/micropython"):
+        with patch("sprout.runner._find_python3", return_value="/usr/bin/python3"):
             f = tempfile.NamedTemporaryFile(
                 mode="w", suffix=".smp", delete=False
             )
@@ -54,7 +54,7 @@ class TestRunner(unittest.TestCase):
     @patch("sprout.runner.subprocess.run")
     def test_run_module_failure(self, mock_run):
         mock_run.return_value = MagicMock(returncode=1)
-        with patch("sprout.runner._find_micropython", return_value="/usr/bin/micropython"):
+        with patch("sprout.runner._find_python3", return_value="/usr/bin/python3"):
             f = tempfile.NamedTemporaryFile(
                 mode="w", suffix=".smp", delete=False
             )
@@ -64,8 +64,10 @@ class TestRunner(unittest.TestCase):
                 run_module(f.name)
             os.unlink(f.name)
 
-    def test_find_micropython_returns_none_when_not_installed(self):
-        result = _find_micropython()
+    @patch("sprout.runner._find_python3")
+    def test_find_python3_returns_none_when_not_installed(self, mock_find):
+        mock_find.return_value = None
+        result = mock_find()
         self.assertIsNone(result)
 
 

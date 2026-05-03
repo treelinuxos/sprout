@@ -1,58 +1,104 @@
-# sprout
+# Sprout Package Manager
 
-the treelinux package and configuration manager.
+Sprout is a declarative package manager for Alpine Linux. It uses `.prc` (Treelinux Config) files to define the desired state of the system.
 
-prototype in python 3. final version rewritten in go.
+## Core Concepts
 
-## commands
+- **Declarative**: You declare what you want, sprout makes it happen
+- **Atomic**: Changes are applied atomically with automatic backups
+- **Modular**: Supports `.smp` modules for custom logic at apply time
 
-```
-sprout install <pkg>     install a package
-sprout remove <pkg>      remove a package
-sprout upgrade <pkg>     upgrade a package
-sprout update            safe update all
-sprout update --force    full update
-sprout apply             apply system.prc
-sprout diff              preview changes
-sprout search <query>    search packages
-sprout run <script.smp>  run a module script
-sprout info [pkg]        show installed packages
-sprout rollback           restore from backup
-sprout user              manage user configs
-sprout --tui             launch tui
-sprout --help            show help
-```
-
-## structure
+## .prc Config Format
 
 ```
-sprout/
-├── sprout/           — core library
-│   ├── __main__.py   — entry point
-│   ├── cli.py        — cli commands
-│   ├── parser.py     — .prc parser
-│   ├── packages.py   — apk wrapper
-│   ├── backup.py     — config backup/rollback
-│   ├── diff.py       — config vs system diff
-│   ├── applier.py    — apply command
-│   ├── privilege.py  — doas integration
-│   ├── users.py      — per-user configs
-│   ├── runner.py     — .smp module runner
-│   └── tui.py        — curses tui
-├── lib/sprout/       — micropython library for .smp modules
-├── service/sprout/   — runit boot service
-├── tests/            — test suite
-├── examples/         — example .prc configs
-└── modules/          — sample .smp modules
+# comments start with #
+block_name
+	item1
+	item2
+	key value
+
+include other.prc
 ```
 
-## quick start
+### Block Types
+
+- `packages` - list of packages to install
+- `services` - list of services to enable (with `enable ` prefix)
+- `modules` - list of `.smp` modules to run at apply time
+- `user` - user configuration (dict with `name`, `shell`, etc.)
+- `dotfiles` - list of dotfiles to manage
+
+### Example
+
+```
+packages
+	neovim
+	firefox
+	git
+
+services
+	sshd
+	enable networking
+
+modules
+	update-sprout.smp
+	nvidia.smp
+
+include desktop.prc
+```
+
+## Commands
+
+- `sprout apply` - apply system.prc to live system
+- `sprout apply --non-interactive` - apply without prompts
+- `sprout diff` - show differences between config and system
+- `sprout status` - show system status
+- `sprout backup list` - list available backups
+- `sprout backup rollback` - rollback to previous state
+- `sprout search <query>` - search for packages
+- `sprout install <pkg>` - install a package
+- `sprout remove <pkg>` - remove a package
+
+## .smp Modules
+
+`.smp` (Sprout Module Packages) are Python scripts that run at apply time. They have access to the `sprout_lib` library for system interaction.
+
+### Module Example
+
+```python
+#!/usr/bin/env python3
+import sprout_lib
+
+sprout_lib.info("Configuring nvidia drivers...")
+# custom logic here
+sprout_lib.info("Done!")
+```
+
+### sprout_lib API
+
+- `info(msg)` - log info message
+- `warn(msg)` - log warning message
+- `error(msg)` - log error message
+- `run(cmd)` - run a system command
+- `file_write(path, content)` - write file
+- `file_read(path)` - read file
+- `package_install(pkg)` - install package
+- `service_enable(svc)` - enable service
+
+## Installation
 
 ```bash
-python -m sprout --help
-python -m sprout --tui
+pip install sprout
 ```
 
-## license
+Or from source:
 
-gpl v3
+```bash
+git clone https://github.com/treelinuxos/sprout.git
+cd sprout
+pip install -e .
+```
+
+## License
+
+MIT

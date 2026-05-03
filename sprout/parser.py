@@ -82,15 +82,11 @@ def parse(filepath):
                 if current_block not in blocks:
                     blocks[current_block] = []
             current_block = stripped
-            if current_block in blocks and isinstance(blocks.get(current_block), list):
-                # append to existing list block
-                pass  # don't reset the block
-            else:
-                if current_block in blocks:
-                    raise ParseError(
-                        f"{filepath}:{lineno}: duplicate block '{current_block}'"
-                    )
-                blocks[current_block] = []
+            if current_block in blocks:
+                raise ParseError(
+                    f"{filepath}:{lineno}: duplicate block '{current_block}'"
+                )
+            blocks[current_block] = []
 
     # finalize last block if empty
     if current_block is not None and current_block not in blocks:

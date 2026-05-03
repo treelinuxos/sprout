@@ -38,8 +38,19 @@ def diff_config(config_path, system_state=None):
 
     blocks = config["blocks"]
 
-    # diff packages
-    desired_packages = set(blocks.get("packages", []))
+    # diff packages — collect from all packages:* sub-blocks
+    desired_packages = set()
+    for key, value in blocks.items():
+        if key.startswith("packages:"):
+            if isinstance(value, list):
+                desired_packages.update(value)
+            elif isinstance(value, dict):
+                desired_packages.update(value.keys())
+    
+    # also support old format where packages is a list
+    if "packages" in blocks and isinstance(blocks["packages"], list):
+        desired_packages.update(blocks["packages"])
+    
     for pkg in desired_packages:
         if pkg not in system_state.installed_packages:
             result["packages"]["to_install"].append(pkg)
@@ -48,12 +59,24 @@ def diff_config(config_path, system_state=None):
         if pkg not in desired_packages:
             result["packages"]["to_remove"].append(pkg)
 
-    # diff services
+    # diff services — collect from all services:* sub-blocks
     desired_services = set()
+    for key, value in blocks.items():
+        if key.startswith("services:"):
+            if isinstance(value, list):
+                for entry in value:
+                    if entry.startswith("enable "):
+                        desired_services.add(entry[7:].strip())
+            elif isinstance(value, dict):
+                for entry in value.values():
+                    if isinstance(entry, str) and entry.startswith("enable "):
+                        desired_services.add(entry[7:].strip())
+    
+    # also support old format
     for entry in blocks.get("services", []):
-        if entry.startswith("enable "):
+        if isinstance(entry, str) and entry.startswith("enable "):
             desired_services.add(entry[7:].strip())
-
+    
     enabled_services = _get_enabled_services()
     for svc in desired_services:
         if svc not in enabled_services:
@@ -62,6 +85,19 @@ def diff_config(config_path, system_state=None):
     for svc in enabled_services:
         if svc not in desired_services:
             result["services"]["to_disable"].append(svc)
+
+    # collect modules from all modules:* sub-blocks
+    desired_modules = []
+    for key, value in blocks.items():
+        if key.startswith("modules:"):
+            if isinstance(value, list):
+                desired_modules.extend(value)
+    
+    # also support old format
+    if "modules" in blocks and isinstance(blocks["modules"], list):
+        desired_modules.extend(blocks["modules"])
+    
+    result["modules"] = desired_modules
 
     if "user" in blocks and isinstance(blocks["user"], dict):
         result["users"]["desired"] = blocks["user"]

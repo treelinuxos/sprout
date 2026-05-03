@@ -70,7 +70,7 @@ class TestApply(unittest.TestCase):
 
     @patch("sprout.applier.backup")
     @patch("sprout.applier.install")
-    @patch("sprout.applier.SystemState")
+    @patch("sprout.diff.SystemState")
     def test_apply_installs_missing(self, mock_state_cls, mock_install, mock_backup):
         path = self._write("packages\n\tneovim\n\tvim\n")
 
@@ -89,7 +89,7 @@ class TestApply(unittest.TestCase):
     @patch("sprout.applier.backup")
     @patch("sprout.applier.remove")
     @patch("sprout.applier.install")
-    @patch("sprout.applier.SystemState")
+    @patch("sprout.diff.SystemState")
     def test_apply_removes_extra(self, mock_state_cls, mock_install, mock_remove, mock_backup):
         path = self._write("packages\n\tneovim\n")
 
@@ -109,7 +109,7 @@ class TestApply(unittest.TestCase):
     @patch("sprout.applier.backup")
     @patch("sprout.applier.install")
     @patch("sprout.applier.remove")
-    @patch("sprout.applier.SystemState")
+    @patch("sprout.diff.SystemState")
     def test_apply_dry_run(self, mock_state_cls, mock_remove, mock_install, mock_backup):
         path = self._write("packages\n\tneovim\n")
 
@@ -127,7 +127,7 @@ class TestApply(unittest.TestCase):
 
     @patch("sprout.applier.backup")
     @patch("sprout.applier.install")
-    @patch("sprout.applier.SystemState")
+    @patch("sprout.diff.SystemState")
     def test_apply_no_changes(self, mock_state_cls, mock_install, mock_backup):
         path = self._write("packages\n\tneovim\n")
 

@@ -111,7 +111,13 @@ def apply(config_path=None, interactive=True, dry_run=False):
 
 def _run_modules(config):
     """run .smp modules specified in the config."""
-    modules = config["blocks"].get("modules", [])
+    # get modules from diff result (already collected from all modules:* sub-blocks)
+    from sprout.diff import diff_config, SystemState
+    system_state = SystemState()
+    system_state.refresh()
+    result = diff_config(config, system_state)
+    modules = result.get("modules", [])
+    
     if not modules:
         print("  no modules to run")
         return
