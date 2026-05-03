@@ -40,12 +40,24 @@ def diff_config(config_path, system_state=None):
 
     # diff packages
     desired_packages = set(blocks.get("packages", []))
+    # only consider removing packages that were explicitly in the config
+    # (don't remove dependencies)
+    config_packages = set()
+    for line in open(config_path).readlines():
+        line = line.strip()
+        if line and not line.startswith("#") and not line.startswith("include") and "\t" in line:
+            pkg = line.lstrip("\t")
+            if pkg and not pkg.startswith("enable") and not pkg.startswith("name") and not pkg.startswith("shell"):
+                config_packages.add(pkg)
+    
     for pkg in desired_packages:
         if pkg not in system_state.installed_packages:
             result["packages"]["to_install"].append(pkg)
-
-    for pkg in system_state.installed_packages:
-        if pkg not in desired_packages:
+    
+    # only remove packages that are in config but not desired
+    # (don't touch dependencies)
+    for pkg in config_packages:
+        if pkg not in desired_packages and pkg in system_state.installed_packages:
             result["packages"]["to_remove"].append(pkg)
 
     # diff services

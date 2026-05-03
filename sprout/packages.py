@@ -99,12 +99,14 @@ def list_installed():
     packages = []
     for line in result.stdout.strip().split("\n"):
         # apk list format: "name-version-revision arch {origin} (license)"
-        # split on space to get just "name-version-revision"
-        pkg_full = line.split()[0]
-        # split from right: "name-version" + "revision"
-        name_ver, _ = pkg_full.rsplit("-", 1)
-        # split again: "name" + "version"
-        name, _ = name_ver.rsplit("-", 1)
+        # extract just the package name (before first '-' followed by version)
+        pkg_full = line.split()[0]  # "name-version-revision"
+        # find where version starts (first digit after a hyphen)
+        name = pkg_full
+        for i, c in enumerate(pkg_full):
+            if c == '-' and i + 1 < len(pkg_full) and pkg_full[i+1].isdigit():
+                name = pkg_full[:i]
+                break
         packages.append(name)
     return sorted(set(packages))
 
