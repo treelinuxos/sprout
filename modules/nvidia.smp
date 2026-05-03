@@ -1,19 +1,11 @@
 #!/usr/bin/env micropython
-"""
-nvidia.smp — detect and install nvidia drivers.
-
-this module detects the GPU vendor and installs the correct
-nvidia drivers for the current kernel.
-"""
-
 import sprout
 
+# NVIDIA driver installation
 gpu = sprout.detect("gpu")
-
-if gpu != "nvidia":
-    sprout.info("no nvidia GPU detected, skipping")
-    sys.exit(0)
-
-sprout.info("nvidia GPU detected — installing drivers")
-sprout.apply("nvidia-drivers")
-sprout.info("driver installation complete")
+if gpu == "nvidia":
+    sprout.info("NVIDIA GPU detected, installing drivers...")
+    sprout.apply("nvidia")
+    sprout.service_enable("nvidia-persistenced")
+else:
+    sprout.info(f"No NVIDIA GPU detected (found: {gpu})")

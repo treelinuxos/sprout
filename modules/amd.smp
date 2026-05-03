@@ -1,0 +1,10 @@
+#!/usr/bin/env micropython
+import sprout
+
+# AMD GPU driver installation
+gpu = sprout.detect("gpu")
+if gpu == "amd":
+    sprout.info("AMD GPU detected, installing drivers...")
+    sprout.apply("xf86-video-amdgpu")
+else:
+    sprout.info(f"No AMD GPU detected (found: {gpu})")
