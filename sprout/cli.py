@@ -110,51 +110,75 @@ def _cmd_upgrade(args):
     if not args:
         print("sprout upgrade: no package specified", file=sys.stderr)
         sys.exit(1)
-    pkg = args[0]
-    print(f"[todo] upgrade {pkg}")
+    from sprout.packages import upgrade, ApkError
+    try:
+        upgrade(args[0] if len(args) == 1 else args)
+    except ApkError as e:
+        print(f"! upgrade failed: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def _cmd_update(args):
+    from sprout.packages import upgrade, sync, ApkError
+    from sprout.backup import backup, _find_config_files
+    from sprout import utils
     force = "--force" in args
-    print(f"[todo] update (force={force})")
-
-
-def _cmd_apply(args):
-    dry_run = "--dry-run" in args
-    non_interactive = "--non-interactive" in args
-    config = args[-1] if args and not args[-1].startswith("--") else None
-    from sprout.applier import apply
-    apply(config_path=config, interactive=not non_interactive, dry_run=dry_run)
-
-
-def _cmd_diff(args):
-    config = args[0] if args else None
-    from sprout.diff import diff_system, format_diff
-    if config:
-        from sprout.diff import diff_config, SystemState
-        state = SystemState()
-        state.refresh()
-        result = diff_config(config, state)
-        print(format_diff({"system": result, "users": {}}))
-    else:
-        result = diff_system()
-        print(format_diff(result))
+    try:
+        # backup before updating
+        utils.ensure_dirs()
+        backup(
+            _find_config_files(),
+            description="pre-update backup",
+        )
+        if force:
+            print("  force update — upgrading all packages...")
+            upgrade()
+        else:
+            print("  safe update — syncing package database...")
+            sync()
+            upgrade()
+    except ApkError as e:
+        print(f"! update failed: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def _cmd_search(args):
     if not args:
         print("sprout search: no query specified", file=sys.stderr)
         sys.exit(1)
-    query = args[0]
-    print(f"[todo] search {query}")
+    from sprout.packages import search
+    results = search(args[0])
+    if not results:
+        print(f"  no results for '{args[0]}'")
+    else:
+        print(f"  results for '{args[0]}':")
+        for pkg in results:
+            print(f"    {pkg}")
+
+
+def _cmd_info(args):
+    from sprout.packages import list_installed, info as pkg_info
+    if args:
+        # show info about a specific package
+        result = pkg_info(args[0])
+        if result is None:
+            print(f"  package not found: {args[0]}")
+        else:
+            print(result)
+    else:
+        # list all installed
+        installed = list_installed()
+        print(f"  {len(installed)} installed packages:")
+        for pkg in installed:
+            print(f"    {pkg}")
 
 
 def _cmd_run(args):
     if not args:
         print("sprout run: no script specified", file=sys.stderr)
         sys.exit(1)
-    script = args[0]
-    print(f"[todo] run {script}")
+    from sprout.runner import run_module
+    run_module(args[0])
 
 
 def _cmd_user(args):

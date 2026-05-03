@@ -1,0 +1,17 @@
+#!/usr/bin/env micropython
+"""
+sway.smp — install sway wayland compositor and essentials."""
+
+import sprout
+
+sprout.info("installing sway desktop environment")
+sprout.apply([
+    "sway",
+    "foot",
+    "waybar",
+    "wofi",
+    "swayidle",
+    "swaylock",
+])
+sprout.service_enable("sway")
+sprout.info("sway installed")
