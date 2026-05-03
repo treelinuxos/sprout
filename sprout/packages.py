@@ -1,13 +1,8 @@
 """
 apk integration — package install/remove/upgrade/list via apk.
-
-this wraps alpine's apk package manager so sprout can manage packages
-declaratively.
 """
 
 import subprocess
-import sys
-import os
 
 
 class ApkError(Exception):

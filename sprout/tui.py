@@ -1,8 +1,6 @@
-"""
-sprout TUI — simple curses interface."""
+"""sprout TUI — simple curses interface."""
 
 import curses
-import sys
 
 from sprout.diff import diff_system, format_diff
 from sprout.packages import list_installed, search, install, remove
@@ -66,7 +64,7 @@ def _show_search(stdscr):
     curses.noecho()
 
     if query:
-        results = search(query.decode() if isinstance(query, bytes) else query)
+        results = search(query)
         if results:
             lines = [f"  results for '{query}':", ""]
             for p in results[:50]:
