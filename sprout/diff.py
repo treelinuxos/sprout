@@ -1,9 +1,8 @@
 """
 diff engine — compare desired config vs actual system state.
-
-compares what system.prc says should be installed with what is actually
-installed, and what services should be enabled vs what is running.
 """
+
+import os
 
 from sprout.parser import parse, resolve_includes
 from sprout import packages
@@ -15,8 +14,6 @@ class SystemState:
 
     def __init__(self):
         self.installed_packages = set()
-        self.enabled_services = set()
-        self.config_files = {}
 
     def refresh(self):
         """refresh all state from the live system."""
@@ -24,20 +21,7 @@ class SystemState:
 
 
 def diff_config(config_path, system_state=None):
-    """diff a config file against the live system.
-
-    returns a dict:
-        {
-            "packages": {
-                "to_install": [...],
-                "to_remove": [...],
-            },
-            "services": {
-                "to_enable": [...],
-                "to_disable": [...],
-            },
-        }
-    """
+    """diff a config file against the live system."""
     if system_state is None:
         system_state = SystemState()
         system_state.refresh()
@@ -79,7 +63,6 @@ def diff_config(config_path, system_state=None):
         if svc not in desired_services:
             result["services"]["to_disable"].append(svc)
 
-    # user block info
     if "user" in blocks and isinstance(blocks["user"], dict):
         result["users"]["desired"] = blocks["user"]
 
@@ -87,10 +70,7 @@ def diff_config(config_path, system_state=None):
 
 
 def diff_system():
-    """diff system.prc + all user configs against the live system.
-
-    returns a combined diff dict.
-    """
+    """diff system.prc + all user configs against the live system."""
     system_state = SystemState()
     system_state.refresh()
 
@@ -99,29 +79,21 @@ def diff_system():
         "users": {},
     }
 
-    if utils.is_root() or True:  # diff works without root
-        if __import__("os").path.isfile(utils.SYSTEM_CONFIG):
-            result["system"] = diff_config(
-                utils.SYSTEM_CONFIG, system_state
-            )
-        else:
-            result["system"] = {
-                "error": f"no config at {utils.SYSTEM_CONFIG}",
-                "packages": {"to_install": [], "to_remove": []},
-                "services": {"to_enable": [], "to_disable": []},
-            }
+    if os.path.isfile(utils.SYSTEM_CONFIG):
+        result["system"] = diff_config(utils.SYSTEM_CONFIG, system_state)
+    else:
+        result["system"] = {
+            "error": f"no config at {utils.SYSTEM_CONFIG}",
+            "packages": {"to_install": [], "to_remove": []},
+            "services": {"to_enable": [], "to_disable": []},
+        }
 
-        # diff user configs
-        if __import__("os").path.isdir(utils.USER_CONFIG_DIR):
-            for f in __import__("os").listdir(utils.USER_CONFIG_DIR):
-                if f.endswith(".prc"):
-                    username = f[:-4]
-                    path = __import__("os").path.join(
-                        utils.USER_CONFIG_DIR, f
-                    )
-                    result["users"][username] = diff_config(
-                        path, system_state
-                    )
+    if os.path.isdir(utils.USER_CONFIG_DIR):
+        for f in os.listdir(utils.USER_CONFIG_DIR):
+            if f.endswith(".prc"):
+                username = f[:-4]
+                path = os.path.join(utils.USER_CONFIG_DIR, f)
+                result["users"][username] = diff_config(path, system_state)
 
     return result
 
@@ -139,32 +111,27 @@ def format_diff(diff):
         pkgs = sys_diff.get("packages", {})
         svcs = sys_diff.get("services", {})
 
-        to_install = pkgs.get("to_install", [])
-        to_remove = pkgs.get("to_remove", [])
-        to_enable = svcs.get("to_enable", [])
-        to_disable = svcs.get("to_disable", [])
-
-        if to_install:
+        if pkgs.get("to_install"):
             lines.append("packages to install:")
-            for p in to_install:
+            for p in pkgs["to_install"]:
                 lines.append(f"  + {p}")
             lines.append("")
 
-        if to_remove:
+        if pkgs.get("to_remove"):
             lines.append("packages not in system.prc:")
-            for p in to_remove:
+            for p in pkgs["to_remove"]:
                 lines.append(f"  - {p}")
             lines.append("")
 
-        if to_enable:
+        if svcs.get("to_enable"):
             lines.append("services to enable:")
-            for s in to_enable:
+            for s in svcs["to_enable"]:
                 lines.append(f"  + {s}")
             lines.append("")
 
-        if to_disable:
+        if svcs.get("to_disable"):
             lines.append("services not in system.prc:")
-            for s in to_disable:
+            for s in svcs["to_disable"]:
                 lines.append(f"  - {s}")
             lines.append("")
 
@@ -172,36 +139,27 @@ def format_diff(diff):
         for username, user_diff in diff["users"].items():
             lines.append(f"user: {username}")
             pkgs = user_diff.get("packages", {})
-            to_install = pkgs.get("to_install", [])
-            to_remove = pkgs.get("to_remove", [])
-
-            if to_install:
-                for p in to_install:
+            if pkgs.get("to_install"):
+                for p in pkgs["to_install"]:
                     lines.append(f"  + {p}")
-            if to_remove:
-                for p in to_remove:
+            if pkgs.get("to_remove"):
+                for p in pkgs["to_remove"]:
                     lines.append(f"  - {p}")
             lines.append("")
 
-    if len(lines) == 0:
+    if not lines:
         return "  system is in sync with config\n"
 
     return "\n".join(lines)
 
 
 def _get_enabled_services():
-    """get set of currently enabled/running services.
-
-    on a runit system, services are enabled by having a symlink in
-    /etc/runit/runsvdir/default/ pointing to the service dir.
-    """
-    import os
+    """get set of currently enabled runit services."""
     runit_dir = "/etc/runit/runsvdir/default"
     if not os.path.isdir(runit_dir):
         return set()
 
-    enabled = set()
-    for entry in os.listdir(runit_dir):
-        if os.path.islink(os.path.join(runit_dir, entry)):
-            enabled.add(entry)
-    return enabled
+    return {
+        entry for entry in os.listdir(runit_dir)
+        if os.path.islink(os.path.join(runit_dir, entry))
+    }

@@ -68,11 +68,10 @@ class TestApply(unittest.TestCase):
         f.close()
         return f.name
 
-    @patch("sprout.applier.utils.ensure_dirs")
     @patch("sprout.applier.backup")
     @patch("sprout.applier.install")
     @patch("sprout.applier.SystemState")
-    def test_apply_installs_missing(self, mock_state_cls, mock_install, mock_backup, mock_ensure):
+    def test_apply_installs_missing(self, mock_state_cls, mock_install, mock_backup):
         path = self._write("packages\n\tneovim\n\tvim\n")
 
         mock_state = MagicMock()
@@ -87,12 +86,11 @@ class TestApply(unittest.TestCase):
 
         os.unlink(path)
 
-    @patch("sprout.applier.utils.ensure_dirs")
     @patch("sprout.applier.backup")
     @patch("sprout.applier.remove")
     @patch("sprout.applier.install")
     @patch("sprout.applier.SystemState")
-    def test_apply_removes_extra(self, mock_state_cls, mock_install, mock_remove, mock_backup, mock_ensure):
+    def test_apply_removes_extra(self, mock_state_cls, mock_install, mock_remove, mock_backup):
         path = self._write("packages\n\tneovim\n")
 
         mock_state = MagicMock()

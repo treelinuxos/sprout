@@ -2,9 +2,6 @@
 
 import sys
 
-from sprout.parser import parse, ParseError
-from sprout import utils
-
 
 def run(args):
     """main entry point for sprout cli."""
@@ -18,8 +15,8 @@ def run(args):
         _show_help()
         sys.exit(0)
     elif command == "--tui":
-        _show_tui_notice()
-        sys.exit(0)
+        from sprout.tui import run as run_tui
+        run_tui()
     elif command == "install":
         _cmd_install(args[1:])
     elif command == "remove":
@@ -76,12 +73,7 @@ def _show_help():
     print("  --help             show this help")
 
 
-def _show_tui_notice():
-    from sprout.tui import run
-    run()
-
-
-# ---- command stubs ----
+# ---- commands ----
 
 def _cmd_install(args):
     if not args:
@@ -122,15 +114,9 @@ def _cmd_upgrade(args):
 def _cmd_update(args):
     from sprout.packages import upgrade, sync, ApkError
     from sprout.backup import backup, _find_config_files
-    from sprout import utils
     force = "--force" in args
     try:
-        # backup before updating
-        utils.ensure_dirs()
-        backup(
-            _find_config_files(),
-            description="pre-update backup",
-        )
+        backup(_find_config_files(), description="pre-update backup")
         if force:
             print("  force update — upgrading all packages...")
             upgrade()
@@ -235,10 +221,6 @@ def _cmd_user(args):
     else:
         print(f"sprout user: unknown subcommand '{subcmd}'", file=sys.stderr)
         sys.exit(1)
-
-
-def _cmd_info(args):
-    print("[todo] info")
 
 
 def _cmd_rollback(args):

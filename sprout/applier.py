@@ -17,7 +17,8 @@ from sprout.parser import parse, resolve_includes
 from sprout.diff import diff_config, SystemState
 from sprout.packages import install, remove, ApkError
 from sprout.backup import backup, _find_config_files
-from sprout import utils
+
+SYSTEM_CONFIG = "/etc/treelinux/system.prc"
 
 
 def apply(config_path=None, interactive=True, dry_run=False):
@@ -28,7 +29,7 @@ def apply(config_path=None, interactive=True, dry_run=False):
     dry_run: if True, only show what would change
     """
     if config_path is None:
-        config_path = utils.SYSTEM_CONFIG
+        config_path = SYSTEM_CONFIG
 
     if not os.path.isfile(config_path):
         print(f"! config not found: {config_path}")
@@ -70,7 +71,6 @@ def apply(config_path=None, interactive=True, dry_run=False):
         return
 
     # backup before making changes
-    utils.ensure_dirs()
     backup(
         _find_config_files(),
         description=f"pre-apply backup for {os.path.basename(config_path)}",
@@ -109,8 +109,6 @@ def _handle_removal(packages, config_path):
     [r] remove — uninstall it
     [i] ignore — do nothing
     """
-    from sprout.parser import parse as _parse
-
     to_remove = []
     to_add_back = []
 
