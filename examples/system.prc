@@ -1,18 +1,5 @@
-# system.prc — root system config
-
+# Main system config
 packages
-	firefox
 	neovim
-	nano
-	htop
-
-services
-	enable networking
-	enable bluetooth
-
-user
-	name admin
-	shell zsh
-
+include desktop.prc
 include networking.prc
-include audio.prc
