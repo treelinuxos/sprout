@@ -77,7 +77,8 @@ def _show_help():
 
 
 def _show_tui_notice():
-    print("sprout: tui mode coming soon")
+    from sprout.tui import run
+    run()
 
 
 # ---- command stubs ----

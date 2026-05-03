@@ -2,46 +2,55 @@
 
 the treelinux package and configuration manager.
 
-prototype implementation in python 3. final version will be rewritten in go.
+prototype in python 3. final version rewritten in go.
 
-## status
+## commands
 
-phase 1 — core parser and cli skeleton.
+```
+sprout install <pkg>     install a package
+sprout remove <pkg>      remove a package
+sprout upgrade <pkg>     upgrade a package
+sprout update            safe update all
+sprout update --force    full update
+sprout apply             apply system.prc
+sprout diff              preview changes
+sprout search <query>    search packages
+sprout run <script.smp>  run a module script
+sprout info [pkg]        show installed packages
+sprout rollback           restore from backup
+sprout user              manage user configs
+sprout --tui             launch tui
+sprout --help            show help
+```
 
-### done
-- `.prc` file parser (list blocks, key-value blocks, includes)
-- include resolution with circular reference detection
-- cli entry point with all planned commands
-
-### next
-- `sprout apply` — apply system.prc to live system
-- `sprout diff` — preview changes
-- backup and rollback system
-- apk integration (install/remove/upgrade)
-- .smp module runtime
-- doas privilege escalation
-
-## project structure
+## structure
 
 ```
 sprout/
-├── sprout/          — core library
-│   ├── __main__.py  — entry point
-│   ├── cli.py       — argument parsing
-│   ├── parser.py    — .prc file parser
-│   └── utils.py     — shared helpers
-├── lib/sprout/      — micropython library for .smp modules
-├── tests/           — test suite
-├── examples/        — example .prc config files
-└── modules/         — sample .smp modules
+├── sprout/           — core library
+│   ├── __main__.py   — entry point
+│   ├── cli.py        — cli commands
+│   ├── parser.py     — .prc parser
+│   ├── packages.py   — apk wrapper
+│   ├── backup.py     — config backup/rollback
+│   ├── diff.py       — config vs system diff
+│   ├── applier.py    — apply command
+│   ├── privilege.py  — doas integration
+│   ├── users.py      — per-user configs
+│   ├── runner.py     — .smp module runner
+│   └── tui.py        — curses tui
+├── lib/sprout/       — micropython library for .smp modules
+├── service/sprout/   — runit boot service
+├── tests/            — test suite
+├── examples/         — example .prc configs
+└── modules/          — sample .smp modules
 ```
 
 ## quick start
 
 ```bash
 python -m sprout --help
-python -m sprout install neovim
-python tests/test_parser.py
+python -m sprout --tui
 ```
 
 ## license
