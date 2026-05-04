@@ -101,4 +101,4 @@ pip install -e .
 
 ## License
 
-MIT
+gpl v3
