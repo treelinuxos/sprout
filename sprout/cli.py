@@ -27,6 +27,8 @@ def run(args):
         _cmd_update(args[1:])
     elif command == "modules":
         _cmd_modules(args[1:])
+    elif command == "list":
+        _cmd_list(args[1:])
     elif command == "apply":
         from sprout.applier import apply
         apply(interactive=(not "--non-interactive" in args[1:]))
@@ -73,6 +75,7 @@ def _show_help():
     print("  update --force     full update (user accepts risk)")
     print("  apply              apply system.prc to the live system")
     print("  diff               preview what would change")
+    print("  list               list packages and services from configs")
     print("  search <query>     search official package and module repo")
     print("  run <script.smp>   run a module script manually")
     print("  modules            reload/update modules from github")
@@ -286,6 +289,91 @@ def _cmd_modules(args):
         except subprocess.CalledProcessError as e:
             print(f"! install failed: {e}", file=sys.stderr)
             sys.exit(1)
+
+
+def _cmd_list(args):
+    """list packages and services from configs, or list modules."""
+    from sprout.parser import parse, resolve_includes
+    import os
+    
+    # check if listing modules
+    if args and args[0] == "modules":
+        _list_modules()
+        return
+    
+    config_path = args[0] if args else "/etc/treelinux/system.prc"
+    
+    if not os.path.isfile(config_path):
+        print(f"! config not found: {config_path}", file=sys.stderr)
+        sys.exit(1)
+    
+    # parse and resolve includes
+    config = parse(config_path)
+    config = resolve_includes(config, config_path)
+    
+    # collect packages
+    packages = []
+    if "packages" in config and isinstance(config["packages"], list):
+        packages.extend(config["packages"])
+    
+    # collect from packages:* sub-blocks
+    for key, value in config.items():
+        if key.startswith("packages:") and isinstance(value, list):
+            packages.extend(value)
+    
+    # collect services
+    services = []
+    if "services" in config and isinstance(config["services"], list):
+        services.extend(config["services"])
+    
+    # collect from services:* sub-blocks
+    for key, value in config.items():
+        if key.startswith("services:") and isinstance(value, list):
+            services.extend(value)
+    
+    # print results
+    print(f"Config: {config_path}")
+    print()
+    
+    if packages:
+        print(f"Packages ({len(packages)}):")
+        for pkg in packages:
+            print(f"  {pkg}")
+    else:
+        print("No packages found")
+    
+    print()
+    
+    if services:
+        print(f"Services ({len(services)}):")
+        for svc in services:
+            print(f"  {svc}")
+    else:
+        print("No services found")
+
+
+def _list_modules():
+    """list all available .smp modules."""
+    import os
+    from sprout.utils import MODULE_DIR
+    
+    print(f"Modules directory: {MODULE_DIR}")
+    print()
+    
+    modules = []
+    for root, dirs, files in os.walk(MODULE_DIR):
+        for f in files:
+            if f.endswith(".smp"):
+                rel_path = os.path.relpath(os.path.join(root, f), MODULE_DIR)
+                modules.append(rel_path)
+    
+    if modules:
+        print(f"Available modules ({len(modules)}):")
+        for mod in sorted(modules):
+            print(f"  {mod}")
+    else:
+        print("No modules found")
+
 
 def _cmd_rollback(args):
     from sprout.backup import rollback, list_backups
