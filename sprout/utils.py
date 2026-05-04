@@ -10,6 +10,21 @@ MODULE_DIR = "/etc/treelinux/modules"
 BACKUP_DIR = "/var/treelinux/backups"
 
 
+def find_module(name):
+    """search for a .smp module recursively in module directories.
+    
+    searches in MODULE_DIR and its subdirectories.
+    returns full path if found, None otherwise.
+    """
+    if not name.endswith(".smp"):
+        name = name + ".smp"
+    
+    for root, dirs, files in os.walk(MODULE_DIR):
+        if name in files:
+            return os.path.join(root, name)
+    return None
+
+
 def user_config(username):
     """return the path to a user's .prc file."""
     return os.path.join(USER_CONFIG_DIR, f"{username}.prc")

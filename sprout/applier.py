@@ -126,16 +126,19 @@ def _run_modules(config):
     from sprout.runner import run_module
     import os
     
-    # search in /etc/treelinux/modules/ and include dirs
+    # search recursively in /etc/treelinux/modules/ and /etc/treelinux/
     module_dirs = ["/etc/treelinux/modules", "/etc/treelinux"]
     
-    for mod in modules:
-        found = None
+    def find_module(name):
+        """search for module recursively in directories."""
         for d in module_dirs:
-            path = os.path.join(d, mod)
-            if os.path.isfile(path):
-                found = path
-                break
+            for root, dirs, files in os.walk(d):
+                if name in files:
+                    return os.path.join(root, name)
+        return None
+    
+    for mod in modules:
+        found = find_module(mod)
         if found:
             print(f"    running {mod}...")
             try:

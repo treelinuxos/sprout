@@ -246,7 +246,7 @@ def _cmd_modules(args):
         print(f"  updating modules in {modules_dir}...")
         try:
             subprocess.run(
-                ["git", "-C", modules_dir, "pull"],
+                ["git", "-C", modules_dir, "pull", "--rebase", "--autostash"],
                 check=True,
                 timeout=60,
             )
