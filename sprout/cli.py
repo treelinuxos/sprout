@@ -310,24 +310,27 @@ def _cmd_list(args):
     # parse and resolve includes
     config = parse(config_path)
     config = resolve_includes(config, config_path)
+    blocks = config.get("blocks", {})
     
-    # collect packages
+    # collect packages (check both "packages" and "packages:")
     packages = []
-    if "packages" in config and isinstance(config["packages"], list):
-        packages.extend(config["packages"])
+    for key in ["packages", "packages:"]:
+        if key in blocks and isinstance(blocks[key], list):
+            packages.extend(blocks[key])
     
     # collect from packages:* sub-blocks
-    for key, value in config.items():
+    for key, value in blocks.items():
         if key.startswith("packages:") and isinstance(value, list):
             packages.extend(value)
     
-    # collect services
+    # collect services (check both "services" and "services:")
     services = []
-    if "services" in config and isinstance(config["services"], list):
-        services.extend(config["services"])
+    for key in ["services", "services:"]:
+        if key in blocks and isinstance(blocks[key], list):
+            services.extend(blocks[key])
     
     # collect from services:* sub-blocks
-    for key, value in config.items():
+    for key, value in blocks.items():
         if key.startswith("services:") and isinstance(value, list):
             services.extend(value)
     
