@@ -254,6 +254,24 @@ def _cmd_modules(args):
         except subprocess.CalledProcessError as e:
             print(f"! update failed: {e}", file=sys.stderr)
             sys.exit(1)
+    elif os.path.isdir(modules_dir) and os.listdir(modules_dir):
+        # directory exists but not a git repo - remove and clone
+        print(f"  reinstalling modules to {modules_dir}...")
+        try:
+            subprocess.run(
+                ["rm", "-rf", modules_dir],
+                check=True,
+                timeout=30,
+            )
+            subprocess.run(
+                ["git", "clone", repo_url, modules_dir],
+                check=True,
+                timeout=60,
+            )
+            print("  modules installed")
+        except subprocess.CalledProcessError as e:
+            print(f"! install failed: {e}", file=sys.stderr)
+            sys.exit(1)
     else:
         # clone repo
         print(f"  installing modules to {modules_dir}...")
