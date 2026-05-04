@@ -99,15 +99,14 @@ def list_installed():
     packages = []
     for line in result.stdout.strip().split("\n"):
         # apk list format: "name-version-revision arch {origin} (license)"
-        # we want just "name" - find first '-' followed by digit
         pkg_full = line.split()[0]  # "name-version-revision"
-        # find where version starts
+        # find where version starts (first digit after '-')
         import re
-        match = re.match(r'^([a-z][a-z0-9_-]*?)-[0-9]', pkg_full)
+        match = re.match(r'^([a-z][a-z0-9_-]*?)-(\d)', pkg_full)
         if match:
             name = match.group(1)
         else:
-            # fallback: split on '-' and try to find version
+            # fallback: split on '-' and find where version starts
             parts = pkg_full.split('-')
             name = parts[0]
             for i in range(1, len(parts)):
