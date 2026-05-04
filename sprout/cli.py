@@ -25,6 +25,8 @@ def run(args):
         _cmd_upgrade(args[1:])
     elif command == "update":
         _cmd_update(args[1:])
+    elif command == "modules":
+        _cmd_modules(args[1:])
     elif command == "apply":
         from sprout.applier import apply
         apply(interactive=(not "--non-interactive" in args[1:]))
@@ -73,6 +75,7 @@ def _show_help():
     print("  diff               preview what would change")
     print("  search <query>     search official package and module repo")
     print("  run <script.smp>   run a module script manually")
+    print("  modules            reload/update modules from github")
     print("  user               manage users")
     print("  info               show installed packages")
     print("  rollback           restore from a backup")
@@ -229,6 +232,42 @@ def _cmd_user(args):
         print(f"sprout user: unknown subcommand '{subcmd}'", file=sys.stderr)
         sys.exit(1)
 
+
+def _cmd_modules(args):
+    """reload/update modules from github."""
+    import subprocess
+    import os
+    
+    modules_dir = "/etc/treelinux/modules"
+    repo_url = "https://github.com/treelinuxos/sprout-modules.git"
+    
+    if os.path.isdir(os.path.join(modules_dir, ".git")):
+        # update existing repo
+        print(f"  updating modules in {modules_dir}...")
+        try:
+            subprocess.run(
+                ["git", "-C", modules_dir, "pull"],
+                check=True,
+                timeout=60,
+            )
+            print("  modules updated")
+        except subprocess.CalledProcessError as e:
+            print(f"! update failed: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        # clone repo
+        print(f"  installing modules to {modules_dir}...")
+        os.makedirs(modules_dir, exist_ok=True)
+        try:
+            subprocess.run(
+                ["git", "clone", repo_url, modules_dir],
+                check=True,
+                timeout=60,
+            )
+            print("  modules installed")
+        except subprocess.CalledProcessError as e:
+            print(f"! install failed: {e}", file=sys.stderr)
+            sys.exit(1)
 
 def _cmd_rollback(args):
     from sprout.backup import rollback, list_backups
