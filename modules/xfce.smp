@@ -1,6 +1,0 @@
-#!/usr/bin/env python3
-import sprout_lib
-
-sprout_lib.info("XFCE desktop environment module")
-# TODO: configure xfce, set up display manager, etc.
-sprout_lib.info("XFCE module complete")

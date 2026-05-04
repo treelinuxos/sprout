@@ -1,6 +1,0 @@
-#!/usr/bin/env python3
-import sprout_lib
-
-sprout_lib.info("i3 window manager module")
-# TODO: configure i3 config, set up display manager, etc.
-sprout_lib.info("i3 module complete")

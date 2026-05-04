@@ -1,6 +1,0 @@
-#!/usr/bin/env python3
-import sprout_lib
-
-sprout_lib.info("GNOME desktop environment module")
-# TODO: configure gnome, set up display manager, etc.
-sprout_lib.info("GNOME module complete")

@@ -1,6 +1,0 @@
-#!/usr/bin/env python3
-import sprout_lib
-
-sprout_lib.info("Hyprland compositor module")
-# TODO: configure hyprland config, set up display manager, etc.
-sprout_lib.info("Hyprland module complete")

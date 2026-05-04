@@ -84,7 +84,8 @@ def apply(config_path=None, interactive=True, dry_run=False):
         try:
             install(to_install)
             # add installed packages to config
-            _append_to_config(config_path, "packages", to_install)
+            from sprout.utils import append_to_config
+            append_to_config(config_path, "packages", to_install)
             print(f"  added {', '.join(to_install)} to {config_path}")
         except ApkError as e:
             print(f"! install failed: {e}")
